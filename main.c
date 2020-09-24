@@ -13,10 +13,10 @@ struct hash_dict {
     struct hash_item items[];
 };
 
-static long string_hash(const char *key) {
+static long bytes_hash(uint8_t *key, size_t len) {
     /* djbx33a hash */
     long result = 5381;
-    for(size_t i = 0; i < strlen(key); ++i) {
+    for(size_t i = 0; i < len; ++i) {
         result = (result << 5) + result + key[i];
     }
     return result;
@@ -36,7 +36,7 @@ void hash_dict_free(struct hash_dict *this) {
     free(this);
 }
 
-#define HASH_BUCKET(this, key)  (string_hash(key) % (this)->buckets)
+#define HASH_BUCKET(this, key)  (bytes_hash((void *)(key), strlen(key)) % (this)->buckets)
 
 static size_t _next_hash_bucket(struct hash_dict *this, const char *key) {
     size_t bucket = HASH_BUCKET(this, key);
