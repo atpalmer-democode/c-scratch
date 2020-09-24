@@ -3,6 +3,7 @@
 #include <string.h>
 
 struct hash_item {
+    long hash;
     const char *key;
     const char *value;
 };
@@ -36,7 +37,8 @@ void hash_dict_free(struct hash_dict *this) {
     free(this);
 }
 
-#define HASH_BUCKET(this, key)  (bytes_hash((void *)(key), strlen(key)) % (this)->buckets)
+#define HASH_BUCKET(this, hash)     ((hash) % (this)->buckets)
+#define STRING_HASH(key)            (bytes_hash((void *)(key), strlen(key)))
 
 static size_t _bucket_advance(size_t bucket, struct hash_dict *dict) {
     ++bucket;
@@ -45,16 +47,16 @@ static size_t _bucket_advance(size_t bucket, struct hash_dict *dict) {
     return bucket;
 }
 
-static size_t _next_hash_bucket(struct hash_dict *this, const char *key) {
-    size_t bucket = HASH_BUCKET(this, key);
-    while(this->items[bucket].key) {
+static size_t _next_hash_bucket(struct hash_dict *this, long hash) {
+    size_t bucket = HASH_BUCKET(this, hash);
+    while(this->items[bucket].key)
         bucket = _bucket_advance(bucket, this);
-    }
     return bucket;
 }
 
-static void _hash_dict_add(struct hash_dict *this, const char *key, const char *value) {
-    size_t bucket = _next_hash_bucket(this, key);
+static void _hash_dict_add(struct hash_dict *this, long hash, const char *key, const char *value) {
+    size_t bucket = _next_hash_bucket(this, hash);
+    this->items[bucket].hash = hash;
     this->items[bucket].key = key;
     this->items[bucket].value = value;
     ++this->count;
@@ -69,7 +71,7 @@ void hash_dict_rehash(struct hash_dict **this) {
         struct hash_item *item = &(*this)->items[i];
         if(!item->key)
             continue;
-        _hash_dict_add(new, item->key, item->value);
+        _hash_dict_add(new, item->hash, item->key, item->value);
     }
     hash_dict_free(*this);
     *this = new;
@@ -77,11 +79,13 @@ void hash_dict_rehash(struct hash_dict **this) {
 
 void hash_dict_add(struct hash_dict **this, const char *key, const char *value) {
     hash_dict_rehash(&*this);
-    _hash_dict_add(*this, key, value);
+    long hash = STRING_HASH(key);
+    _hash_dict_add(*this, hash, key, value);
 }
 
 const char *hash_dict_get(struct hash_dict *this, const char *key) {
-    size_t bucket = HASH_BUCKET(this, key);
+    long hash = STRING_HASH(key);
+    size_t bucket = HASH_BUCKET(this, hash);
     while(this->items[bucket].key) {
         if(strcmp(this->items[bucket].key, key) == 0)
             return this->items[bucket].value;
