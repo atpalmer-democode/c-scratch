@@ -38,12 +38,17 @@ void hash_dict_free(struct hash_dict *this) {
 
 #define HASH_BUCKET(this, key)  (bytes_hash((void *)(key), strlen(key)) % (this)->buckets)
 
+static size_t _bucket_advance(size_t bucket, struct hash_dict *dict) {
+    ++bucket;
+    if(bucket > dict->buckets)
+        bucket = 0;
+    return bucket;
+}
+
 static size_t _next_hash_bucket(struct hash_dict *this, const char *key) {
     size_t bucket = HASH_BUCKET(this, key);
     while(this->items[bucket].key) {
-        ++bucket;
-        if(bucket > this->buckets)
-            bucket = 0;
+        bucket = _bucket_advance(bucket, this);
     }
     return bucket;
 }
@@ -80,9 +85,7 @@ const char *hash_dict_get(struct hash_dict *this, const char *key) {
     while(this->items[bucket].key) {
         if(strcmp(this->items[bucket].key, key) == 0)
             return this->items[bucket].value;
-        ++bucket;
-        if(bucket > this->buckets)
-            bucket = 0;
+        bucket = _bucket_advance(bucket, this);
     }
     return NULL;
 }
