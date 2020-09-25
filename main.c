@@ -23,20 +23,6 @@ static long bytes_hash(uint8_t *key, size_t len) {
     return result;
 }
 
-struct hash_dict *hash_dict_new(size_t buckets) {
-    if(!buckets)
-        buckets = 1;
-    struct hash_dict *new = malloc(sizeof *new + (sizeof(*new->items) * buckets));
-    new->count = 0;
-    new->buckets = buckets;
-    memset(new->items, 0, buckets);
-    return new;
-}
-
-void hash_dict_free(struct hash_dict *this) {
-    free(this);
-}
-
 #define HASH_BUCKET(this, hash)     ((hash) % (this)->buckets)
 #define STRING_HASH(key)            (bytes_hash((void *)(key), strlen(key)))
 
@@ -60,6 +46,20 @@ static void _hash_dict_add(struct hash_dict *this, long hash, const char *key, c
     this->items[bucket].key = key;
     this->items[bucket].value = value;
     ++this->count;
+}
+
+struct hash_dict *hash_dict_new(size_t buckets) {
+    if(!buckets)
+        buckets = 1;
+    struct hash_dict *new = malloc(sizeof *new + (sizeof(*new->items) * buckets));
+    new->count = 0;
+    new->buckets = buckets;
+    memset(new->items, 0, buckets);
+    return new;
+}
+
+void hash_dict_free(struct hash_dict *this) {
+    free(this);
 }
 
 void hash_dict_rehash(struct hash_dict **this) {
