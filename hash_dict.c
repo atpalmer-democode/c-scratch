@@ -6,7 +6,7 @@
 #define HASH_BUCKET(this, hash)     ((hash) % (this)->buckets)
 #define HASH_ITEM(this, bucket)     (&(this)->items[(bucket)])
 
-static ssize_t _bucket_advance(long *hash, ssize_t bucket, ssize_t buckets) {
+static ssize_t _bucket_advance(uint64_t *hash, ssize_t bucket, ssize_t buckets) {
     /* Python dict algorithm */
     ssize_t result = 5 * bucket + *hash + 1;
     *hash >>= 5;
@@ -14,7 +14,7 @@ static ssize_t _bucket_advance(long *hash, ssize_t bucket, ssize_t buckets) {
 }
 
 static ssize_t _bucket_find(struct hash_dict *this, const char *key) {
-    long hash = STRING_HASH(key);
+    uint64_t hash = STRING_HASH(key);
     ssize_t bucket = HASH_BUCKET(this, hash);
     while(HASH_ITEM(this, bucket)->key) {
         if(strcmp(HASH_ITEM(this, bucket)->key, key) == 0)
@@ -24,14 +24,14 @@ static ssize_t _bucket_find(struct hash_dict *this, const char *key) {
     return -1;
 }
 
-static ssize_t _next_hash_bucket(struct hash_dict *this, long hash) {
+static ssize_t _next_hash_bucket(struct hash_dict *this, uint64_t hash) {
     ssize_t bucket = HASH_BUCKET(this, hash);
     while(HASH_ITEM(this, bucket)->key)
         bucket = _bucket_advance(&hash, bucket, this->buckets);
     return bucket;
 }
 
-static void _hash_dict_add(struct hash_dict *this, long hash, const char *key, const char *value) {
+static void _hash_dict_add(struct hash_dict *this, uint64_t hash, const char *key, const char *value) {
     ssize_t bucket = _next_hash_bucket(this, hash);
     HASH_ITEM(this, bucket)->hash = hash;
     HASH_ITEM(this, bucket)->key = key;
@@ -72,7 +72,7 @@ void hash_dict_resize(struct hash_dict **this) {
 
 void hash_dict_add(struct hash_dict **this, const char *key, const char *value) {
     hash_dict_resize(&*this);
-    long hash = STRING_HASH(key);
+    uint64_t hash = STRING_HASH(key);
     _hash_dict_add(*this, hash, key, value);
 }
 

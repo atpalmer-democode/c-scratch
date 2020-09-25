@@ -1,8 +1,10 @@
 #ifndef HASH_DICT_H
 #define HASH_DICT_H
 
+#include <stdint.h>
+
 struct hash_item {
-    long hash;
+    uint64_t hash;
     const char *key;
     const char *value;
 };
