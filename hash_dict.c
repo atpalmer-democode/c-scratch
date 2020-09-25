@@ -13,6 +13,17 @@ static size_t _bucket_advance(long *hash, size_t bucket, size_t buckets) {
     return result % buckets;
 }
 
+static ssize_t _bucket_find(struct hash_dict *this, const char *key) {
+    long hash = STRING_HASH(key);
+    size_t bucket = HASH_BUCKET(this, hash);
+    while(HASH_ITEM(this, bucket)->key) {
+        if(strcmp(HASH_ITEM(this, bucket)->key, key) == 0)
+            return bucket;
+        bucket = _bucket_advance(&hash, bucket, this->buckets);
+    }
+    return -1;
+}
+
 static size_t _next_hash_bucket(struct hash_dict *this, long hash) {
     size_t bucket = HASH_BUCKET(this, hash);
     while(HASH_ITEM(this, bucket)->key)
@@ -66,14 +77,10 @@ void hash_dict_add(struct hash_dict **this, const char *key, const char *value) 
 }
 
 const char *hash_dict_get(struct hash_dict *this, const char *key) {
-    long hash = STRING_HASH(key);
-    size_t bucket = HASH_BUCKET(this, hash);
-    while(HASH_ITEM(this, bucket)->key) {
-        if(strcmp(HASH_ITEM(this, bucket)->key, key) == 0)
-            return HASH_ITEM(this, bucket)->value;
-        bucket = _bucket_advance(&hash, bucket, this->buckets);
-    }
-    return NULL;
+    ssize_t bucket = _bucket_find(this, key);
+    if(bucket < 0)
+        return NULL;
+    return HASH_ITEM(this, bucket)->value;
 }
 
 void hash_dict_print(struct hash_dict *this) {
