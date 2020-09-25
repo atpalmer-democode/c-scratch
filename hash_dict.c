@@ -43,7 +43,7 @@ void hash_dict_free(struct hash_dict *this) {
 }
 
 void hash_dict_resize(struct hash_dict **this) {
-    size_t new_count = ((*this)->count + 1) * 2;
+    size_t new_count = (*this)->buckets * 2;
     if((*this)->buckets > new_count)
         return;
     struct hash_dict *new = hash_dict_new(new_count);
