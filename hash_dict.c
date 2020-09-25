@@ -42,7 +42,7 @@ static void _hash_dict_add(struct hash_dict *this, uint64_t hash, const char *ke
 }
 
 struct hash_dict *hash_dict_new(ssize_t buckets) {
-    if(!buckets)
+    if(buckets <= 0)
         buckets = 1;
     struct hash_dict *new = malloc(sizeof *new + (sizeof(*new->items) * buckets));
     new->count = 0;
