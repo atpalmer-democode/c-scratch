@@ -62,7 +62,7 @@ void hash_dict_free(struct hash_dict *this) {
     free(this);
 }
 
-void hash_dict_rehash(struct hash_dict **this) {
+void hash_dict_resize(struct hash_dict **this) {
     size_t new_count = ((*this)->count + 1) * 2;
     if((*this)->buckets > new_count)
         return;
@@ -78,7 +78,7 @@ void hash_dict_rehash(struct hash_dict **this) {
 }
 
 void hash_dict_add(struct hash_dict **this, const char *key, const char *value) {
-    hash_dict_rehash(&*this);
+    hash_dict_resize(&*this);
     long hash = STRING_HASH(key);
     _hash_dict_add(*this, hash, key, value);
 }
