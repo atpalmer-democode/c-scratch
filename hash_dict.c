@@ -14,6 +14,7 @@ static ssize_t _bucket_advance(uint64_t *hash, ssize_t bucket, ssize_t buckets) 
 }
 
 static ssize_t _bucket_find(struct hash_dict *this, const char *key) {
+    /* TODO: find active OR find available (i.e. inactive or deleted) */
     uint64_t hash = STRING_HASH(key);
     ssize_t bucket = HASH_BUCKET(this, hash);
     while(HASH_ITEM(this, bucket)->status != ITEM_STATUS_INACTIVE) {
