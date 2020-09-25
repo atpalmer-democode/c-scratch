@@ -4,6 +4,7 @@
 #include "hash.h"
 
 #define HASH_BUCKET(this, hash)     ((hash) % (this)->buckets)
+#define HASH_ITEM(this, bucket)     (&(this)->items[(bucket)])
 
 static size_t _bucket_advance(long *hash, size_t bucket, size_t buckets) {
     /* Python dict algorithm */
@@ -14,16 +15,16 @@ static size_t _bucket_advance(long *hash, size_t bucket, size_t buckets) {
 
 static size_t _next_hash_bucket(struct hash_dict *this, long hash) {
     size_t bucket = HASH_BUCKET(this, hash);
-    while(this->items[bucket].key)
+    while(HASH_ITEM(this, bucket)->key)
         bucket = _bucket_advance(&hash, bucket, this->buckets);
     return bucket;
 }
 
 static void _hash_dict_add(struct hash_dict *this, long hash, const char *key, const char *value) {
     size_t bucket = _next_hash_bucket(this, hash);
-    this->items[bucket].hash = hash;
-    this->items[bucket].key = key;
-    this->items[bucket].value = value;
+    HASH_ITEM(this, bucket)->hash = hash;
+    HASH_ITEM(this, bucket)->key = key;
+    HASH_ITEM(this, bucket)->value = value;
     ++this->count;
 }
 
@@ -47,10 +48,12 @@ void hash_dict_resize(struct hash_dict **this) {
         return;
     struct hash_dict *new = hash_dict_new(new_count);
     for(size_t i = 0; i < (*this)->buckets; ++i) {
-        struct hash_item *item = &(*this)->items[i];
-        if(!item->key)
+        if(!HASH_ITEM(*this, i)->key)
             continue;
-        _hash_dict_add(new, item->hash, item->key, item->value);
+        _hash_dict_add(new,
+            HASH_ITEM(*this, i)->hash,
+            HASH_ITEM(*this, i)->key,
+            HASH_ITEM(*this, i)->value);
     }
     hash_dict_free(*this);
     *this = new;
@@ -65,9 +68,9 @@ void hash_dict_add(struct hash_dict **this, const char *key, const char *value) 
 const char *hash_dict_get(struct hash_dict *this, const char *key) {
     long hash = STRING_HASH(key);
     size_t bucket = HASH_BUCKET(this, hash);
-    while(this->items[bucket].key) {
-        if(strcmp(this->items[bucket].key, key) == 0)
-            return this->items[bucket].value;
+    while(HASH_ITEM(this, bucket)->key) {
+        if(strcmp(HASH_ITEM(this, bucket)->key, key) == 0)
+            return HASH_ITEM(this, bucket)->value;
         bucket = _bucket_advance(&hash, bucket, this->buckets);
     }
     return NULL;
@@ -76,11 +79,13 @@ const char *hash_dict_get(struct hash_dict *this, const char *key) {
 void hash_dict_print(struct hash_dict *this) {
     printf("{\n");
     for(size_t i = 0; i < this->buckets; ++i) {
-        struct hash_item *item = &this->items[i];
-        if(!item->key) {
+        if(!HASH_ITEM(this, i)->key) {
             continue;
         }
-        printf("  %lu.) %s: %s\n", i, item->key, item->value);
+        printf("  %lu.) %s: %s\n",
+            i,
+            HASH_ITEM(this, i)->key,
+            HASH_ITEM(this, i)->value);
     }
     printf("}\n");
 }
