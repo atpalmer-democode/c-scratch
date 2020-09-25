@@ -22,9 +22,6 @@ struct hash_dict {
     struct hash_item items[];
 };
 
-#define HASH_BUCKET(this, hash)     ((hash) % (this)->buckets)
-#define STRING_HASH(key)            (bytes_hash((void *)(key), strlen(key)))
-
 struct hash_dict *hash_dict_new(ssize_t buckets);
 void hash_dict_free(struct hash_dict *this);
 void hash_dict_resize(struct hash_dict **this);
