@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-long bytes_hash(uint8_t *key, size_t len);
+long bytes_hash(uint8_t *key, ssize_t len);
 
 #define STRING_HASH(key)            (bytes_hash((void *)(key), strlen(key)))
 
