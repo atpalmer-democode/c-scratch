@@ -13,6 +13,9 @@ int main(void) {
     const char *lname = hash_dict_get(dict, "lname");
 
     printf("Get Results: %s %s %s\n", fname, mname, lname);
+
+    hash_dict_del(&dict, "mname");
     hash_dict_print(dict);
+
     hash_dict_free(dict);
 }
